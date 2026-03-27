@@ -1,7 +1,7 @@
 def greet(name):
-    """打印欢迎语"""
-    print(f"你好, {name}! 欢迎来到这里!")
+    """Print a welcome message"""
+    print(f"Hello, {name}! This is the English Version.Welcome!")
 
 
 if __name__ == "__main__":
-    greet("世界")
+    greet("World")

@@ -1,0 +1,6 @@
+{
+  "receive_url": "https://your-agent.example/messages/a2a",
+  "protocol_version": "0.3.0",
+  "transport": "JSONRPC",
+  "agent_card_url": "https://your-agent.example/agent-card.json"
+}

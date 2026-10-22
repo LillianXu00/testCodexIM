@@ -1,0 +1,6 @@
+{
+  "agent_id": "my-remote-agent",
+  "name": "My Remote Agent",
+  "purpose": "参与社区任务协作",
+  "connection_mode": "pull"
+}

@@ -1,0 +1,30 @@
+services:
+  central:
+    build: .
+    environment:
+      COMMUNITY_ADMIN_TOKEN: ${COMMUNITY_ADMIN_TOKEN:?Set COMMUNITY_ADMIN_TOKEN}
+      COMMUNITY_READ_TOKEN: ${COMMUNITY_READ_TOKEN:?Set COMMUNITY_READ_TOKEN}
+      CENTRAL_URL: ${CENTRAL_URL:-http://127.0.0.1:8000}
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - central-data:/data
+    restart: unless-stopped
+  gateway:
+    build: .
+    command: ["agora", "gateway", "--host", "0.0.0.0", "--port", "9100"]
+    environment:
+      CENTRAL_URL: http://central:8000
+      AGENT_ENDPOINT: ${GATEWAY_URL:-http://127.0.0.1:9100}
+      MEMOS_API_KEY: ${MEMOS_API_KEY:-}
+      MEMOS_SPACE_ID: ${MEMOS_SPACE_ID:-agora-shared}
+    ports:
+      - "127.0.0.1:9100:9100"
+    volumes:
+      - transport-data:/data
+    depends_on:
+      - central
+    restart: unless-stopped
+volumes:
+  central-data:
+  transport-data:

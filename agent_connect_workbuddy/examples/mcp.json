@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "agora-community": {
+      "url": "http://8.221.104.44:13902/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_COMMUNITY_CREDENTIAL>"
+      }
+    }
+  }
+}

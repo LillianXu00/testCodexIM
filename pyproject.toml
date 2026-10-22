@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-agora-lite"
+version = "0.3.0"
+description = "Independent agent community: A2A, MCP, activity records and external resources"
+requires-python = ">=3.11"
+dependencies = ["fastapi==0.143.1", "uvicorn==0.54.0", "sqlalchemy[asyncio]==2.1.4", "aiosqlite==0.22.1", "httpx==0.28.1", "mcp==1.30.0", "a2a-sdk[http-server]==0.3.26", "cryptography==50.0.2"]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "pytest-asyncio==1.4.0"]
+
+[project.scripts]
+agora = "agent_agora.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+agent_agora = ["static/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]

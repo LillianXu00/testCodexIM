@@ -33,6 +33,11 @@ class Decision(Lookup):
     reason: str = Field(default='', max_length=2000)
 
 
+class Removal(StrictModel):
+    agent_id: str = Field(pattern=r'^[a-zA-Z0-9_.-]{1,128}$')
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class Admission:
     def __init__(self, authority, settings):
         self.authority, self.settings = authority, settings
@@ -48,6 +53,8 @@ class Admission:
         self.cipher = Fernet(path.read_bytes())
         with authority.transaction() as db:
             db.executescript('''
+CREATE TABLE IF NOT EXISTS deleted_agents(
+ agent TEXT PRIMARY KEY, data TEXT NOT NULL, deleted REAL NOT NULL, reason TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS admission_applications(
  id TEXT PRIMARY KEY, agent TEXT, data TEXT, state TEXT, created REAL, decided REAL,
  reason TEXT, code_digest TEXT, code_cipher TEXT, code_expires REAL,
@@ -85,7 +92,7 @@ CREATE TABLE IF NOT EXISTS admission_audit(
 
     def apply(self, body):
         with self.authority.transaction() as db:
-            if db.execute('SELECT 1 FROM agents WHERE id=?',(body.agent_id,)).fetchone():
+            if db.execute('SELECT 1 FROM agents WHERE id=? UNION ALL SELECT 1 FROM deleted_agents WHERE agent=?',(body.agent_id,body.agent_id)).fetchone():
                 raise HTTPException(409, 'identity already registered; keep its existing credential')
             if db.execute("SELECT 1 FROM admission_applications WHERE agent=? AND state IN ('pending','approved')",(body.agent_id,)).fetchone():
                 raise HTTPException(409,'an active application exists; ask administrator if its ID was lost')
@@ -118,7 +125,7 @@ CREATE TABLE IF NOT EXISTS admission_audit(
                     raise HTTPException(409,'rejected application cannot be approved; request a new application')
                 if body.action=='reissue' and row['state']!='approved':
                     raise HTTPException(409,'approve a pending application first')
-                if db.execute('SELECT 1 FROM agents WHERE id=?',(row['agent'],)).fetchone():
+                if db.execute('SELECT 1 FROM agents WHERE id=? UNION ALL SELECT 1 FROM deleted_agents WHERE agent=?',(row['agent'],row['agent'])).fetchone():
                     raise HTTPException(409,'identity already exists')
                 code='reg_'+secrets.token_urlsafe(32)
                 db.execute("UPDATE admission_applications SET state='approved',reason=?,decided=?,code_digest=?,code_cipher=?,code_expires=? WHERE id=?",
@@ -142,7 +149,7 @@ CREATE TABLE IF NOT EXISTS admission_audit(
                 return result
             if row['state']!='approved' or row['code_expires']<=time.time():
                 raise HTTPException(403,'code not approved or expired')
-            if db.execute('SELECT 1 FROM agents WHERE id=?',(row['agent'],)).fetchone():
+            if db.execute('SELECT 1 FROM agents WHERE id=? UNION ALL SELECT 1 FROM deleted_agents WHERE agent=?',(row['agent'],row['agent'])).fetchone():
                 raise HTTPException(409,'identity already exists')
             data=json.loads(row['data'])
             metadata={k:data[k] for k in ('agent_id','name','capabilities')}
@@ -187,6 +194,31 @@ def install(app, authority, settings):
     @app.post('/api/v3/admission/admin/detail')
     def detail(body:Lookup,authorization:str=Header(default='')):
         admin(authorization);return service.status(body.application_id)
+
+    @app.post('/api/v3/admission/admin/agents')
+    def agents(limit:int=100,offset:int=0,authorization:str=Header(default='')):
+        admin(authorization)
+        if not 1<=limit<=500 or offset<0:raise HTTPException(400,'invalid pagination')
+        with authority.transaction() as db:
+            return {'agents':[json.loads(row[0]) for row in db.execute('SELECT data FROM agents ORDER BY id LIMIT ? OFFSET ?',(limit,offset))]}
+
+    @app.post('/api/v3/admission/admin/delete-agent')
+    def delete_agent(body:Removal,authorization:str=Header(default='')):
+        admin(authorization)
+        with authority.transaction() as db:
+            row=db.execute('SELECT data FROM agents WHERE id=?',(body.agent_id,)).fetchone()
+            if not row:
+                if db.execute('SELECT 1 FROM deleted_agents WHERE agent=?',(body.agent_id,)).fetchone():
+                    return {'agent_id':body.agent_id,'deleted':True,'already_deleted':True}
+                raise HTTPException(404,'agent not found')
+            db.execute('INSERT INTO deleted_agents(agent,data,deleted,reason) VALUES(?,?,?,?)',
+                       (body.agent_id,row[0],time.time(),body.reason))
+            db.execute('UPDATE credentials SET revoked=1 WHERE agent=?',(body.agent_id,))
+            db.execute('UPDATE transport_bindings SET active=0 WHERE agent=?',(body.agent_id,))
+            db.execute("UPDATE admission_applications SET state='rejected',reason=?,code_digest=NULL,code_cipher=NULL,result_cipher=NULL WHERE agent=?",
+                       ('Identity deleted: '+body.reason,body.agent_id))
+            db.execute('DELETE FROM agents WHERE id=?',(body.agent_id,))
+        return {'agent_id':body.agent_id,'deleted':True,'cache_propagation_seconds':60}
 
     @app.get('/admin')
     def page():return FileResponse(Path(__file__).parent/'static'/'admin.html')

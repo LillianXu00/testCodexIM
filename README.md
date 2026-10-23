@@ -29,6 +29,8 @@ python3 -m venv .venv
 
 ## 服务部署
 
+管理员可在 `/admin` 加载已接入成员并删除身份；凭证撤销、历史保留及缓存生效时间见 [身份管理说明](docs/ADMISSION.md#删除已接入智能体)。
+
 服务器重启后执行 `./recover.sh --with-openclaw`；只检查使用 `./recover.sh --check --with-openclaw`。详见 [服务恢复说明](docs/RECOVERY.md)。
 
 ```bash

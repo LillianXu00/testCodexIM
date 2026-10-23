@@ -18,5 +18,28 @@ function render(){el('applications').replaceChildren();const filter=el('filter')
  }
 }
 el('load').onclick=()=>{adminToken=el('admin-token').value;offset=0;refresh().catch(error);};
-el('logout').onclick=()=>{adminToken='';el('admin-token').value='';rows=[];render();el('result').textContent='';el('notice').textContent='已清除凭证';};
+el('logout').onclick=()=>{adminToken='';el('members').replaceChildren();el('admin-token').value='';rows=[];render();el('result').textContent='';el('notice').textContent='已清除凭证';};
 el('filter').oninput=render;el('previous').onclick=()=>{offset=Math.max(0,offset-100);refresh().catch(error);};el('next').onclick=()=>{offset+=100;refresh().catch(error);};
+
+let memberOffset=0;
+async function members(){
+ adminToken=el('admin-token').value;
+ const data=await api('agents?limit=100&offset='+memberOffset);
+ el('members').replaceChildren();
+ el('members-prev').disabled=memberOffset===0;el('members-next').disabled=data.agents.length<100;
+ for(const agent of data.agents){
+  const box=node('section','');box.append(node('h3',agent.agent_id+' · '+agent.name));
+  const reason=document.createElement('input');reason.placeholder='删除原因（必填）';reason.maxLength=2000;box.append(reason);
+  const button=node('button','删除智能体');
+  button.onclick=async()=>{
+   if(!reason.value.trim()){error(Error('请填写删除原因'));return;}
+   if(!confirm('确定删除智能体“'+agent.name+'”？删除后凭证失效，历史记录保留。'))return;
+   button.disabled=true;
+   try{const result=await api('delete-agent',{agent_id:agent.agent_id,reason:reason.value.trim()});el('result').textContent=JSON.stringify(result,null,2);await members();await refresh();}
+   catch(e){error(e);button.disabled=false;}
+  };box.append(button);el('members').append(box);
+ }
+}
+el('load-agents').onclick=()=>{memberOffset=0;members().catch(error);};
+el('members-prev').onclick=()=>{memberOffset=Math.max(0,memberOffset-100);members().catch(error);};
+el('members-next').onclick=()=>{memberOffset+=100;members().catch(error);};

@@ -108,3 +108,31 @@ async def test_admin_page_and_redemption_after_revocation(admission):
     assert (await http.post('/api/v3/admission/redeem',json=payload)).status_code==401
     assert (await http.post('/api/v3/admission/admin/decision',headers={'Authorization':'Bearer admin-secret'},
         json={'application_id':approved['application_id'],'action':'reissue'})).status_code==409
+
+async def test_admin_delete_revokes_preserves_and_prevents_rejoin(admission):
+    app,http=admission
+    from planetbaltan.peer_authority import init,verify_peer
+    from fastapi import HTTPException
+    init(app.state.authority)
+    application=await apply(http,'removed')
+    approved=await decision(http,application)
+    payload={k:approved[k] for k in ('application_id','registration_code')}
+    identity=(await http.post('/api/v3/admission/redeem',json=payload)).json()
+    with app.state.authority.transaction() as db:
+        db.execute("INSERT INTO transport_bindings(id,agent,digest,public_key,endpoint,active) VALUES(?,?,?,?,?,1)",('proof','removed',app.state.authority.digest(identity['credential']),'key','url'))
+        db.execute("INSERT INTO submissions(id,request,sender) VALUES('historic','{}','removed')")
+    url='/api/v3/admission/admin/delete-agent';body={'agent_id':'removed','reason':'retired'}
+    for token in ('','read',identity['credential']):
+        assert (await http.post(url,json=body,headers={'Authorization':'Bearer '+token})).status_code==401
+    headers={'Authorization':'Bearer admin-secret'}
+    assert (await http.post(url,json=body,headers=headers)).status_code==200
+    assert (await http.post(url,json=body,headers=headers)).json()['already_deleted']
+    assert (await http.post('/api/v2/credentials/verify',headers={'Authorization':'Bearer '+identity['credential']})).status_code==401
+    assert (await http.post('/api/v3/admission/redeem',json=payload)).status_code==403
+    assert (await http.post('/api/v3/admission/apply',json={'agent_id':'removed','name':'reuse','purpose':'test'})).status_code==409
+    assert (await http.post('/api/v3/admission/admin/agents',headers=headers)).json()['agents']==[]
+    with pytest.raises(HTTPException):verify_peer(app.state.authority,'proof')
+    with app.state.authority.transaction() as db:
+        assert db.execute("SELECT count(*) FROM submissions WHERE sender='removed'").fetchone()[0]==1
+        assert db.execute("SELECT reason FROM deleted_agents WHERE agent='removed'").fetchone()[0]=='retired'
+    assert (await http.post(url,json={'agent_id':'missing','reason':'test'},headers=headers)).status_code==404

@@ -17,13 +17,15 @@ def archive(output, base, prefix, files):
 
 def main():
     general=ROOT/'agent_connect';buddy=ROOT/'agent_connect_workbuddy'
-    shutil.copy2(ROOT/'packages/community-skill/SKILL.md',general/'skills/agora-community/SKILL.md')
-    files=[ROOT/'pyproject.toml']+sorted(p for p in (ROOT/'src/agent_agora').rglob('*')
+    for target in (general, buddy):
+        shutil.copy2(ROOT/'docs/CONNECT_UPGRADE.md', target/'UPGRADE.md')
+    shutil.copy2(ROOT/'packages/community-skill/SKILL.md',general/'skills/planetbaltan-community/SKILL.md')
+    files=[ROOT/'pyproject.toml']+sorted(p for p in (ROOT/'src').rglob('*')
         if p.is_file() and p.suffix in {'.py','.html','.js','.css'} and '__pycache__' not in p.parts)
-    archive(general/'sdk/agent-agora-lite-source.tar.gz',ROOT,'agent-agora-lite',files)
-    shutil.copy2(general/'sdk/agent-agora-lite-source.tar.gz',buddy/'sdk/agent-agora-lite-source.tar.gz')
+    archive(general/'sdk/planetbaltan-source.tar.gz',ROOT,'planetbaltan',files)
+    shutil.copy2(general/'sdk/planetbaltan-source.tar.gz',buddy/'sdk/planetbaltan-source.tar.gz')
     adapter=ROOT/'adapters/workbuddy'
-    archive(buddy/'sdk/agent-agora-workbuddy-source.tar.gz',adapter,'agent-agora-workbuddy',
+    archive(buddy/'sdk/planetbaltan-workbuddy-source.tar.gz',adapter,'planetbaltan-workbuddy',
             [adapter/'pyproject.toml']+sorted((adapter/'src').rglob('*.py')))
     for root in (general,buddy):
         (root/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(root))+'\n'

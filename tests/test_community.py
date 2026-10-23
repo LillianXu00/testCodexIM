@@ -6,11 +6,11 @@ import httpx
 import pytest
 from a2a.client import A2AClient
 from a2a.types import AgentCard, SendMessageRequest, MessageSendParams, Message, Part, DataPart, TextPart
-from agent_agora.central import create_app as central_app
-from agent_agora.sidecar import create_app as sidecar_app
-from agent_agora.config import Settings
-from agent_agora.protocol import SignedEvent, Event, canonical
-from agent_agora.memory import MemosClient
+from planetbaltan.central import create_app as central_app
+from planetbaltan.sidecar import create_app as sidecar_app
+from planetbaltan.config import Settings
+from planetbaltan.protocol import SignedEvent, Event, canonical
+from planetbaltan.memory import MemosClient
 
 
 @pytest.fixture
@@ -129,7 +129,7 @@ async def test_outage_and_persistent_retry(community):
         await a.deliver(row)
     a.store.failed(row,'offline',1,1)
     assert a.store.delivery_status(r['event_id'])[-1]['state']=='delivered'
-    from agent_agora.local import LocalStore
+    from planetbaltan.local import LocalStore
     reopened=LocalStore(a.settings.data_dir/'sidecar.sqlite')
     assert any(x['state']=='failed' for x in reopened.delivery_status(r['event_id']))
     reopened.retry(r['event_id']); reopened.db.close()
@@ -192,7 +192,7 @@ async def test_native_im_first_and_parent_linkage(community):
 
 async def test_identity_takeover_and_conflicting_event(community):
     central,(a,b,c),_=community
-    from agent_agora.protocol import AgentRegistration,now
+    from planetbaltan.protocol import AgentRegistration,now
     payload={'agent_id':'alpha','name':'fake','bio':'','capabilities':[],
              'endpoint':'http://fake','public_key':b.identity.public_key,'timestamp':now()}
     with pytest.raises(ValueError,match='another key'):

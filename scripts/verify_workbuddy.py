@@ -15,11 +15,11 @@ async def main():
     out=ROOT/'.runtime'/('workbuddy-acceptance-'+str(uuid4())[:8]);out.mkdir(mode=0o700)
     ports=[port() for _ in range(3)];urls=[f'http://127.0.0.1:{p}' for p in ports];processes=[]
     env={**os.environ,'PYTHONPATH':str(ROOT/'adapters/workbuddy/src')+':'+str(ROOT/'src'),
-         'CENTRAL_URL':urls[0],'COMMUNITY_ADMIN_TOKEN':'test-admin','COMMUNITY_READ_TOKEN':'test-read','AGORA_ALLOW_LOCAL':'1','AGORA_HOST_ROUTES':''}
+         'CENTRAL_URL':urls[0],'COMMUNITY_ADMIN_TOKEN':'test-admin','COMMUNITY_READ_TOKEN':'test-read','PLANETBALTAN_ALLOW_LOCAL':'1','PLANETBALTAN_HOST_ROUTES':''}
     try:
-        for i,entry in enumerate(['agent_agora.central:create_app','agent_agora.gateway:create_app','agora_workbuddy.app:create_app']):
+        for i,entry in enumerate(['planetbaltan.central:create_app','planetbaltan.gateway:create_app','planetbaltan_workbuddy.app:create_app']):
             with (out/f'{i}.log').open('w') as log:
-                processes.append(subprocess.Popen([sys.executable,'-m','uvicorn',entry,'--factory','--host','127.0.0.1','--port',str(ports[i])],env={**env,'AGORA_DATA_DIR':str(out/str(i)),'AGENT_ENDPOINT':urls[i]},stdout=log,stderr=log))
+                processes.append(subprocess.Popen([sys.executable,'-m','uvicorn',entry,'--factory','--host','127.0.0.1','--port',str(ports[i])],env={**env,'PLANETBALTAN_DATA_DIR':str(out/str(i)),'AGENT_ENDPOINT':urls[i]},stdout=log,stderr=log))
         async with httpx.AsyncClient(timeout=15) as http:
             for url in urls:
                 for _ in range(100):

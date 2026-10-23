@@ -17,7 +17,8 @@ STATE=ROOT/'.runtime/v2'
 
 def owned(record):
     try:
-        return b'agent_agora.cli' in Path(f"/proc/{record['pid']}/cmdline").read_bytes().split(b'\0') and Path(f"/proc/{record['pid']}/stat").read_text().split()[21]==record['start_time']
+        args = Path(f"/proc/{record['pid']}/cmdline").read_bytes().split(b'\0')
+        return any(name in args for name in (b'planetbaltan.cli', b'agent_agora.cli')) and Path(f"/proc/{record['pid']}/stat").read_text().split()[21]==record['start_time']
     except (KeyError,FileNotFoundError):return False
 
 
@@ -36,15 +37,15 @@ def run(command):
                 with socket.socket() as sock:
                     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                     sock.bind((node['host'],node['port']))
-                env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'AGORA_DATA_DIR':str(STATE/'data'),
+                env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'PLANETBALTAN_DATA_DIR':str(STATE/'data'),
                      'CENTRAL_URL':cfg['public_url'] if name=='central' else cfg['local_url'],
                      'AGENT_ENDPOINT':node['url'],'COMMUNITY_JOIN_TOKEN':cfg['join_token'],
-                     'COMMUNITY_ADMIN_TOKEN':cfg.get('admin_token',''),'COMMUNITY_READ_TOKEN':cfg['read_token'],'AGORA_ALLOW_LOCAL':'1','AGORA_LEGACY_WRITES':'0'}
+                     'COMMUNITY_ADMIN_TOKEN':cfg.get('admin_token',''),'COMMUNITY_READ_TOKEN':cfg['read_token'],'PLANETBALTAN_ALLOW_LOCAL':'1','PLANETBALTAN_LEGACY_WRITES':'0'}
                 if name=='gateway':
                     env.update(memos)
-                    env['AGORA_HOST_ROUTES']=str(STATE/'host-routes.json')
+                    env['PLANETBALTAN_HOST_ROUTES']=str(STATE/'host-routes.json')
                 with (STATE/f'{name}.log').open('a') as log:
-                    proc=subprocess.Popen([sys.executable,'-m','agent_agora.cli',name,'--host',node['host'],'--port',str(node['port'])],cwd=ROOT,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
+                    proc=subprocess.Popen([sys.executable,'-m','planetbaltan.cli',name,'--host',node['host'],'--port',str(node['port'])],cwd=ROOT,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
                 records[name]={'pid':proc.pid,'start_time':Path(f'/proc/{proc.pid}/stat').read_text().split()[21]}
                 path.write_text(json.dumps(records))
                 for _ in range(100):

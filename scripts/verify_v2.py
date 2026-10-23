@@ -28,12 +28,12 @@ async def run():
     ports=[free_port(),free_port(),free_port()]
     url=f'http://127.0.0.1:{ports[0]}'
     processes=[]
-    env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'AGORA_DATA_DIR':str(out/'data'),
-         'CENTRAL_URL':url,'COMMUNITY_JOIN_TOKEN':'test-enrollment','COMMUNITY_READ_TOKEN':'test-read','AGORA_ALLOW_LOCAL':'1'}
+    env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'PLANETBALTAN_DATA_DIR':str(out/'data'),
+         'CENTRAL_URL':url,'COMMUNITY_JOIN_TOKEN':'test-enrollment','COMMUNITY_READ_TOKEN':'test-read','PLANETBALTAN_ALLOW_LOCAL':'1'}
     try:
         for service,port in zip(['central','gateway','gateway'],ports):
             with (out/f'{service}-{port}.log').open('w') as log:
-                processes.append(subprocess.Popen([sys.executable,'-m','agent_agora.cli',service,'--port',str(port)],env={**env,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'},stdout=log,stderr=log))
+                processes.append(subprocess.Popen([sys.executable,'-m','planetbaltan.cli',service,'--port',str(port)],env={**env,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'},stdout=log,stderr=log))
         async with httpx.AsyncClient(timeout=10) as http:
             for port in ports:
                 for _ in range(100):
@@ -43,7 +43,7 @@ async def run():
                     await asyncio.sleep(.1)
                 else:raise RuntimeError('service startup failed; '+str(out))
         def cli(*args):
-            p=subprocess.run([sys.executable,'-m','agent_agora.cli',*args],env=env,capture_output=True,text=True,timeout=30)
+            p=subprocess.run([sys.executable,'-m','planetbaltan.cli',*args],env=env,capture_output=True,text=True,timeout=30)
             if p.returncode:raise RuntimeError(p.stderr)
             return json.loads(p.stdout)
         for name in ['alpha','beta','gamma']:

@@ -20,7 +20,7 @@ async def run():
     ports=[free_port() for _ in range(4)]
     central=f'http://127.0.0.1:{ports[0]}'
     env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'COMMUNITY_JOIN_TOKEN':'local-test-join',
-         'COMMUNITY_READ_TOKEN':'local-test-read','SIDECAR_TOKEN':'local-test-tools','AGORA_ALLOW_LOCAL':'1',
+         'COMMUNITY_READ_TOKEN':'local-test-read','SIDECAR_TOKEN':'local-test-tools','PLANETBALTAN_ALLOW_LOCAL':'1',
          'CENTRAL_URL':central,'OPENCLAW_STATE_DIR':str(state),'OPENCLAW_CONFIG_PATH':str(state/'openclaw.json')}
     processes=[];logs=[]
     async def turn(name,index,prompt):
@@ -38,8 +38,8 @@ async def run():
         for i,port in enumerate(ports):
             name='central' if i==0 else ('alpha','beta','gamma')[i-1]
             log=(root/f'{name}-service.log').open('w');logs.append(log)
-            processes.append(subprocess.Popen([sys.executable,'-m','agent_agora.cli','central' if i==0 else 'sidecar','--port',str(port)],
-                env={**env,'AGORA_DATA_DIR':str(root/name),'AGENT_ID':name,'AGENT_NAME':name,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'},stdout=log,stderr=log,cwd=ROOT))
+            processes.append(subprocess.Popen([sys.executable,'-m','planetbaltan.cli','central' if i==0 else 'sidecar','--port',str(port)],
+                env={**env,'PLANETBALTAN_DATA_DIR':str(root/name),'AGENT_ID':name,'AGENT_NAME':name,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'},stdout=log,stderr=log,cwd=ROOT))
         async with httpx.AsyncClient(timeout=10,headers={'Authorization':'Bearer local-test-read'}) as http:
             async def get(path):
                 r=await http.get(central+path);r.raise_for_status();return r.json()

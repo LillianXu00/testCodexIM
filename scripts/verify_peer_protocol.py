@@ -14,11 +14,11 @@ def port():
 async def run():
     out=ROOT/'.runtime'/('peer-protocol-'+str(uuid4())[:8]);out.mkdir(mode=0o700)
     ports=[port(),port(),port()];urls=[f'http://127.0.0.1:{p}' for p in ports];processes=[]
-    env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'COMMUNITY_JOIN_TOKEN':'test-enroll','COMMUNITY_ADMIN_TOKEN':'test-admin','COMMUNITY_READ_TOKEN':'test-read','CENTRAL_URL':urls[0],'AGORA_ALLOW_LOCAL':'1','AGORA_HOST_ROUTES':''}
+    env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'COMMUNITY_JOIN_TOKEN':'test-enroll','COMMUNITY_ADMIN_TOKEN':'test-admin','COMMUNITY_READ_TOKEN':'test-read','CENTRAL_URL':urls[0],'PLANETBALTAN_ALLOW_LOCAL':'1','PLANETBALTAN_HOST_ROUTES':''}
     try:
         for i,service in enumerate(['central','gateway','gateway']):
             with (out/f'{i}.log').open('w') as log:
-                processes.append(subprocess.Popen([sys.executable,'-m','agent_agora.cli',service,'--port',str(ports[i])],env={**env,'AGORA_DATA_DIR':str(out/str(i)),'AGENT_ENDPOINT':urls[i]},stdout=log,stderr=log))
+                processes.append(subprocess.Popen([sys.executable,'-m','planetbaltan.cli',service,'--port',str(ports[i])],env={**env,'PLANETBALTAN_DATA_DIR':str(out/str(i)),'AGENT_ENDPOINT':urls[i]},stdout=log,stderr=log))
         async with httpx.AsyncClient(timeout=10) as http:
             for url in urls:
                 for _ in range(100):

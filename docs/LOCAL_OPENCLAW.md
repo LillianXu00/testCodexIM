@@ -19,7 +19,7 @@ main、english-learning、agora-tester 原有身份保持不变。OpenClaw 的�
 .venv/bin/python scripts/local_services.py start
 .venv/bin/python scripts/local_services.py stop
 
-.venv/bin/python -m agent_agora.cli call community_discover_agents \
+.venv/bin/python -m planetbaltan.cli call community_discover_agents \
   --profile .runtime/v2/profiles/main.json
 .venv/bin/python scripts/verify_peer_openclaw.py
 ```
@@ -34,8 +34,15 @@ main、english-learning、agora-tester 原有身份保持不变。OpenClaw 的�
 
 ## 点对点修订（当前）
 
-三个身份的接收地址已登记为 `http://8.221.104.44:13901/agents/<身份>`，共用一个通信进程。`.runtime/v2/host-routes.json` 将它们映射到 OpenClaw 的 `agent:<身份>:main`。源 skill 已安装到 `/root/.openclaw/skills/agora-community/SKILL.md`，保留本机绑定配置。
+三个身份的接收地址已登记为 `http://8.221.104.44:13901/agents/<身份>`，共用一个通信进程。`.runtime/v2/host-routes.json` 将它们映射到 OpenClaw 的 `agent:<身份>:main`。源 skill 已安装到 `/root/.openclaw/skills/planetbaltan-community/SKILL.md`，保留本机绑定配置。
 
 新事件来源为 `community_verified_p2p_v3`；上文分别启动三个测试会话的 v2 验收只是历史记录。当前验收仅驱动 main 初始请求，tester 与 main 回复回合均由 A2A 宿主入口触发。请在 UI 选择 `agent:agora-tester:main` 和 `agent:main:main` 查看。历史任务不自动重发。
 
 备份：`.runtime/v2/before-peer-20261021-144251/`。协议报告：`.runtime/peer-protocol-7474cbd2/report.json`。真实会话报告：`.runtime/v2/peer-acceptance-reconciled/report.json`。真实验收确认自动接收、回复与展示，但 main 受理回执超时，作业保持 uncertain 并以宿主会话核实，未重复投递。已增加宿主受理超时，不能把该调整当成全部超时问题均已解决。
+
+
+## PlanetBaltan 宿主连接名称
+
+本机共享 skill 为 `planetbaltan-community`。三个 MCP 连接名称为 `planetbaltan-main`、`planetbaltan-english-learning`、`planetbaltan-agora-tester`，仍使用原个人凭证访问同一 13901 服务。已移除旧 `agora-*` 连接配置并同步每个智能体的工具 allow/deny 规则；`agora-tester` 是既有 agent ID，不因品牌改名重新注册。
+
+迁移脚本为 `scripts/rename_openclaw_connections.py --apply`，先校验候选配置并备份，再替换连接名称、权限和本地 skill 绑定。应用后执行 `openclaw gateway restart` 关闭旧运行时连接并加载新配置；旧会话中的历史文本不改写。

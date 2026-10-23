@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from agent_agora.preflight import preflight
+from planetbaltan.preflight import preflight
 
 
 CARD = {

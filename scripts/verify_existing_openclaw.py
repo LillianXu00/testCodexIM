@@ -30,7 +30,7 @@ def audit_native_tools(out):
         required = ['a2a_publish_task'] if name == 'main' else [
             'a2a_get_unread_messages', 'community_claim_event', 'a2a_update_task_status', 'a2a_ack_messages']
         for tool in required:
-            if 'agora-'+name+'__'+tool not in summary.get('tools', []):
+            if 'planetbaltan-'+name+'__'+tool not in summary.get('tools', []):
                 raise AssertionError(name+' did not call required native MCP tool '+tool)
         evidence[name] = summary
     return evidence
@@ -62,8 +62,8 @@ async def run():
             response=await http.get(f"http://127.0.0.1:{cfg['nodes']['central']['port']}"+path);response.raise_for_status();return response.json()
         agents=await get('/api/v1/agents')
         assert all(any(a['agent_id']==name and a['status']=='ONLINE' for a in agents) for name in AGENTS)
-        prefix='This is an explicitly requested local AgentAgora test. Use your own native MCP community tools, not shell, REST, or OpenClaw sessions_send. Do not send native IM or contact real people. Read the agora-community skill if needed. Actually invoke the tools. '
-        await turn('main',prefix+f'Using agora-main tools, discover peers and publish exactly one task titled "{title}" to mentions ["english-learning","agora-tester"]. Task: independently translate "社区连接独立的智能体。" into English, then report COMPLETED to main with a translation artifact. Return task_id and event_id. No need to wait for other agents.')
+        prefix='This is an explicitly requested local PlanetBaltan test. Use your own native MCP community tools, not shell, REST, or OpenClaw sessions_send. Do not send native IM or contact real people. Read the planetbaltan-community skill if needed. Actually invoke the tools. '
+        await turn('main',prefix+f'Using planetbaltan-main tools, discover peers and publish exactly one task titled "{title}" to mentions ["english-learning","agora-tester"]. Task: independently translate "社区连接独立的智能体。" into English, then report COMPLETED to main with a translation artifact. Return task_id and event_id. No need to wait for other agents.')
         task=None
         for _ in range(40):
             tasks=await get('/api/v1/tasks?limit=100')
@@ -72,7 +72,7 @@ async def run():
             await asyncio.sleep(.5)
         if not task:raise RuntimeError('main did not publish through MCP; see '+str(out))
         for name in AGENTS[1:]:
-            await turn(name,prefix+f'Using only agora-{name} tools, read your actual A2A inbox and find task titled "{title}" (task_id {task["task_id"]}). Claim its event, independently provide the requested English translation, report COMPLETED with artifacts {{"translation":"your translation"}} to mentions ["main"], then acknowledge that incoming event. Do not handle other tasks in this test.')
+            await turn(name,prefix+f'Using only planetbaltan-{name} tools, read your actual A2A inbox and find task titled "{title}" (task_id {task["task_id"]}). Claim its event, independently provide the requested English translation, report COMPLETED with artifacts {{"translation":"your translation"}} to mentions ["main"], then acknowledge that incoming event. Do not handle other tasks in this test.')
         for _ in range(40):
             detail=await get('/api/v1/tasks/'+task['task_id'])
             if {r['sender_id'] for r in detail['reports']} >= set(AGENTS[1:]):break

@@ -1,6 +1,6 @@
 # WorkBuddy adapter 0.1.1
 
-独立 Python 发行包 `agent-agora-workbuddy==0.1.1`，依赖 `agent-agora-lite==0.3.0`。通用 src/agent_agora 不含 WorkBuddy 分支，本适配器不修改其代码。部署使用独立进程、端口、SQLite 数据目录与签名密钥；同一适配进程可承载多个 pull 身份，不按智能体启动进程。
+独立 Python 发行包 `planetbaltan-workbuddy==0.1.1`，依赖 `planetbaltan==0.3.0`。通用 src/planetbaltan 不含 WorkBuddy 分支，本适配器不修改其代码。部署使用独立进程、端口、SQLite 数据目录与签名密钥；同一适配进程可承载多个 pull 身份，不按智能体启动进程。
 
 扩展边界：transport.py 继承核心 Transport，复用凭证缓存、签名、A2A 发送、收件校验及中心旁路；只改接收策略和租约工具。sdk.py 继承业务 SDK 并注册适配工具，屏蔽旧无租约消费工具。app.py 是独立 HTTP/MCP 组合入口，cli.py 是独立命令入口。未来其它定制版本可采用同样模块结构，选择自己的 SDK 工具集和 Transport 策略；不 monkey patch 通用模块，不维护复制后的核心分支。跨核心版本升级须运行兼容测试后调整依赖约束。
 

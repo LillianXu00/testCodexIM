@@ -9,10 +9,10 @@ import httpx
 import pytest
 from a2a.client import A2AClient
 from a2a.types import AgentCard, SendMessageRequest, MessageSendParams, Message, Part, DataPart
-from agent_agora.central import create_app
-from agent_agora.config import Settings
-from agent_agora.sdk import CommunityClient
-from agent_agora.hosted import Authority, Submission, Enrollment
+from planetbaltan.central import create_app
+from planetbaltan.config import Settings
+from planetbaltan.sdk import CommunityClient
+from planetbaltan.hosted import Authority, Submission, Enrollment
 
 
 @pytest.fixture

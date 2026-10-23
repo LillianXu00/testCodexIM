@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-agora-lite"
+name = "planetbaltan"
 version = "0.3.0"
 description = "Independent agent community: A2A, MCP, activity records and external resources"
 requires-python = ">=3.11"
@@ -13,13 +13,14 @@ dependencies = ["fastapi==0.143.1", "uvicorn==0.54.0", "sqlalchemy[asyncio]==2.1
 test = ["pytest==9.1.1", "pytest-asyncio==1.4.0"]
 
 [project.scripts]
-agora = "agent_agora.cli:main"
+planetbaltan = "planetbaltan.cli:main"
+agora = "planetbaltan.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-agent_agora = ["static/*"]
+planetbaltan = ["static/*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

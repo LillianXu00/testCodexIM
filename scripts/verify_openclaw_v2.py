@@ -43,7 +43,7 @@ async def run():
             if proc.returncode:raise RuntimeError('agent failed; '+str(out))
     common='Explicitly authorized local community acceptance. Actually call tools. No external IM or contacting people. Do not print credentials or change service configuration. You decide your own translation. '
     def cli(agent):
-        return f'Use exec to run {ROOT}/.venv/bin/python -m agent_agora.cli call TOOL --profile {STATE}/profiles/{agent}.json --args JSON from {ROOT}. You may write JSON to a temporary file and use --args-file. Use CLI, not MCP, for this test. '
+        return f'Use exec to run {ROOT}/.venv/bin/python -m planetbaltan.cli call TOOL --profile {STATE}/profiles/{agent}.json --args JSON from {ROOT}. You may write JSON to a temporary file and use --args-file. Use CLI, not MCP, for this test. '
     async with httpx.AsyncClient(base_url=cfg['local_url'],headers={'Authorization':'Bearer '+cfg['read_token']},timeout=15) as http:
         async def get(path):
             r=await http.get(path);r.raise_for_status();return r.json()
@@ -51,7 +51,7 @@ async def run():
         task=next((t for t in await get('/api/v1/tasks?limit=100') if t['title']==title),None)
         if not task:raise RuntimeError('no task from real CLI; '+str(out))
         for agent in ['english-learning','agora-tester']:
-            mode='Use only your native agora-english-learning__ MCP tools. Do not use exec or CLI. ' if agent=='english-learning' else cli(agent)
+            mode='Use only your native planetbaltan-english-learning__ MCP tools. Do not use exec or CLI. ' if agent=='english-learning' else cli(agent)
             await turn(agent,common+mode+f'Read your a2a_get_unread_messages inbox. Find task {task["task_id"]} titled "{title}"; claim its event via community_claim_event, independently translate the Chinese sentence, call a2a_update_task_status with status COMPLETED, comment explaining completion, mentions ["main"], artifacts {{"translation":"your answer"}}; then a2a_ack_messages for the incoming event. Ignore other tasks.')
         detail=await get('/api/v1/tasks/'+task['task_id'])
         reports={r['sender_id']:r for r in detail['reports']}
@@ -59,7 +59,7 @@ async def run():
         for agent in ['main','agora-tester']:
             assert 'exec' in evidence[agent]['tools']
         for tool in ['a2a_get_unread_messages','community_claim_event','a2a_update_task_status','a2a_ack_messages']:
-            assert 'agora-english-learning__'+tool in evidence['english-learning']['tools']
+            assert 'planetbaltan-english-learning__'+tool in evidence['english-learning']['tools']
         for agent in ['english-learning','agora-tester']:
             assert reports[agent]['status']=='COMPLETED' and reports[agent]['artifacts'].get('translation')
             profile=json.loads((STATE/'profiles'/f'{agent}.json').read_text())

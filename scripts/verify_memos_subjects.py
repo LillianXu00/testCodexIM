@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from uuid import uuid4
 from dotenv import load_dotenv
-from agent_agora.sdk import CommunityClient
+from planetbaltan.sdk import CommunityClient
 
 ROOT = Path(__file__).resolve().parents[1]
 

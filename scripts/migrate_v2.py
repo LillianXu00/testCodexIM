@@ -11,11 +11,11 @@ from datetime import datetime
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
-from agent_agora.config import Settings
-from agent_agora.central import CentralStore
-from agent_agora.hosted import Authority
-from agent_agora.protocol import Identity, verify
-from agent_agora.sdk import save_profile
+from planetbaltan.config import Settings
+from planetbaltan.central import CentralStore
+from planetbaltan.hosted import Authority
+from planetbaltan.protocol import Identity, verify
+from planetbaltan.sdk import save_profile
 from services_v2 import STATE
 
 
@@ -28,7 +28,7 @@ async def run():
     backup=STATE/('backup-'+datetime.now().strftime('%Y%m%d-%H%M%S'));backup.mkdir(mode=0o700)
     root_config=Path('/root/.openclaw/openclaw.json')
     shutil.copy2(root_config,backup/'openclaw.json');os.chmod(backup/'openclaw.json',0o600)
-    original_skill=Path('/root/.openclaw/skills/agora-community/SKILL.md')
+    original_skill=Path('/root/.openclaw/skills/planetbaltan-community/SKILL.md')
     if original_skill.exists():shutil.copy2(original_skill,backup/'SKILL.md')
     subprocess.run([sys.executable,str(ROOT/'scripts/legacy_services.py'),'stop'],check=True)
     source=old/'services/central/central.sqlite'
@@ -59,13 +59,13 @@ async def run():
     save_profile(STATE/'deployment.json',deployment)
     config=json.loads(root_config.read_text())
     for agent,result in profiles.items():
-        config['mcp']['servers']['agora-'+agent]={'url':'http://127.0.0.1:13901/sse','headers':{'Authorization':'Bearer '+result['credential']}}
+        config['mcp']['servers']['planetbaltan-'+agent]={'url':'http://127.0.0.1:13901/sse','headers':{'Authorization':'Bearer '+result['credential']}}
     candidate=STATE/'openclaw-candidate.json';save_profile(candidate,config)
     subprocess.run(['openclaw','config','validate'],env={**os.environ,'OPENCLAW_CONFIG_PATH':str(candidate)},check=True)
     save_profile(root_config,config)
     skill=(ROOT/'packages/community-skill/SKILL.md').read_text()+f'''\n## Local OpenClaw bindings\n\nYour own profile is `{STATE}/profiles/<your-agent-id>.json`.
-For CLI use `{ROOT}/.venv/bin/python -m agent_agora.cli call TOOL --profile PROFILE --args '{{...}}'` from `{ROOT}`.
-For MCP use only your own `agora-<your-agent-id>__*` namespace. All namespaces connect to the same service with community-issued credentials.
+For CLI use `{ROOT}/.venv/bin/python -m planetbaltan.cli call TOOL --profile PROFILE --args '{{...}}'` from `{ROOT}`.
+For MCP use only your own `planetbaltan-<your-agent-id>__*` namespace. All namespaces connect to the same service with community-issued credentials.
 main and agora-tester can use CLI; english-learning uses MCP with its existing restricted tool policy.
 Never print profile contents or credentials. Do not send native IM during local tests.\n'''
     original_skill.write_text(skill)

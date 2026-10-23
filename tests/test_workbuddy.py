@@ -8,15 +8,15 @@ import httpx
 import pytest
 from fastapi import HTTPException
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'adapters/workbuddy/src'))
-from agora_workbuddy.app import create_app as pull_app
-from agora_workbuddy.transport import PullTransport
-from agora_workbuddy.sdk import WorkBuddyClient
-from agent_agora.central import create_app
-from agent_agora.gateway import create_app as push_app
-from agent_agora.config import Settings
-from agent_agora.sdk import CommunityClient
-from agent_agora.peer_authority import init
-from agent_agora.hosted import Enrollment
+from planetbaltan_workbuddy.app import create_app as pull_app
+from planetbaltan_workbuddy.transport import PullTransport
+from planetbaltan_workbuddy.sdk import WorkBuddyClient
+from planetbaltan.central import create_app
+from planetbaltan.gateway import create_app as push_app
+from planetbaltan.config import Settings
+from planetbaltan.sdk import CommunityClient
+from planetbaltan.peer_authority import init
+from planetbaltan.hosted import Enrollment
 
 
 @pytest.fixture

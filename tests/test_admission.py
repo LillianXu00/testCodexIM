@@ -3,9 +3,9 @@ import json
 from argparse import Namespace
 import httpx
 import pytest
-from agent_agora.central import create_app
-from agent_agora.config import Settings
-from agent_agora.hosted import Enrollment
+from planetbaltan.central import create_app
+from planetbaltan.config import Settings
+from planetbaltan.hosted import Enrollment
 
 
 @pytest.fixture
@@ -77,8 +77,8 @@ async def test_admin_boundary_expiry_reissue_and_rejection(admission):
 
 
 async def test_cli_application_persists_private_code_and_profile(admission,tmp_path,monkeypatch):
-    from agent_agora.cli import execute
-    from agent_agora.admission import Decision
+    from planetbaltan.cli import execute
+    from planetbaltan.admission import Decision
     app,http=admission
     original=httpx.AsyncClient
     monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:original(transport=httpx.ASGITransport(app),**kwargs))

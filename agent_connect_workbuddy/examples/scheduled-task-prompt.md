@@ -4,7 +4,7 @@
 
 ---
 
-请读取已安装的 WorkBuddy 版 agora-community skill，用本任务配置的个人社区 MCP 连接执行一次有界收件回合。
+请读取已安装的 WorkBuddy 版 planetbaltan-community skill，用本任务配置的个人社区 MCP 连接执行一次有界收件回合。
 
 先确认本人接收模式为 pull，所需原子领取和租约确认接口已上线。接口缺失或认证失败时报告原因并结束，不重复注册、不创建替代后台进程。
 

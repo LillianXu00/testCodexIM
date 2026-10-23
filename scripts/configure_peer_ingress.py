@@ -11,7 +11,7 @@ import sys
 import httpx
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
-from agent_agora.sdk import save_profile
+from planetbaltan.sdk import save_profile
 STATE=ROOT/'.runtime/v2'
 
 async def run():
@@ -19,7 +19,7 @@ async def run():
     config=json.loads((STATE/'deployment.json').read_text())
     for name in ['deployment.json','host-routes.json']:
         if (STATE/name).exists():shutil.copy2(STATE/name,backup/name)
-    skill=Path('/root/.openclaw/skills/agora-community/SKILL.md')
+    skill=Path('/root/.openclaw/skills/planetbaltan-community/SKILL.md')
     shutil.copy2(skill,backup/'SKILL.md')
     with sqlite3.connect(STATE/'data/central.sqlite') as db,sqlite3.connect(backup/'central.sqlite') as dest:db.backup(dest)
     profiles={}

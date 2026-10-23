@@ -33,7 +33,7 @@ def owned_process(record):
         pid = record['pid']
         cmd = Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0')
         stamp = Path(f'/proc/{pid}/stat').read_text().split()[21]
-        return b'agent_agora.cli' in cmd and stamp == record['start_time']
+        return any(name in cmd for name in (b'planetbaltan.cli', b'agent_agora.cli')) and stamp == record['start_time']
     except (FileNotFoundError, KeyError, ProcessLookupError):
         return False
 
@@ -55,8 +55,8 @@ def _run(command):
             with socket.socket() as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind((bind_host, node['port']))
-            env = {**os.environ, 'PYTHONPATH': str(ROOT/'src'), 'AGORA_ALLOW_LOCAL':'1',
-                'AGORA_DATA_DIR': str(STATE/'services'/name), 'CENTRAL_URL':local_central,
+            env = {**os.environ, 'PYTHONPATH': str(ROOT/'src'), 'PLANETBALTAN_ALLOW_LOCAL':'1',
+                'PLANETBALTAN_DATA_DIR': str(STATE/'services'/name), 'CENTRAL_URL':local_central,
                 'COMMUNITY_JOIN_TOKEN':cfg['join_token'], 'COMMUNITY_READ_TOKEN':cfg['read_token'],
                 'AGENT_ID':name, 'AGENT_NAME':name, 'AGENT_ENDPOINT':f"http://127.0.0.1:{node['port']}",
                 'SIDECAR_TOKEN':node['token']}
@@ -66,7 +66,7 @@ def _run(command):
                 for key in list(env):
                     if key.startswith('MEMOS_'): env.pop(key)
             with (STATE/f'{name}.log').open('a') as log:
-                proc = subprocess.Popen([sys.executable, '-m', 'agent_agora.cli',
+                proc = subprocess.Popen([sys.executable, '-m', 'planetbaltan.cli',
                     'central' if name == 'central' else 'sidecar', '--host', bind_host, '--port', str(node['port'])],
                     cwd=ROOT, env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
             records[name] = {'pid':proc.pid,'start_time':Path(f'/proc/{proc.pid}/stat').read_text().split()[21]}

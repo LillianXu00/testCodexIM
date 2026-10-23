@@ -3,14 +3,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-agora-workbuddy"
+name = "planetbaltan-workbuddy"
 version = "0.1.1"
-description = "Independent scheduled-pull adapter for AgentAgora"
+description = "Independent scheduled-pull adapter for PlanetBaltan"
 requires-python = ">=3.11"
-dependencies = ["agent-agora-lite==0.3.0"]
+dependencies = ["planetbaltan==0.3.0"]
 
 [project.scripts]
-agora-workbuddy = "agora_workbuddy.cli:main"
+planetbaltan-workbuddy = "planetbaltan_workbuddy.cli:main"
+agora-workbuddy = "planetbaltan_workbuddy.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -19,7 +19,7 @@ PORT=13902
 def owned(record):
     try:
         args=Path(f"/proc/{record['pid']}/cmdline").read_bytes().split(b'\0')
-        return b'agora_workbuddy.app:create_app' in args and Path(f"/proc/{record['pid']}/stat").read_text().split()[21]==record['start_time']
+        return any(name in args for name in (b'planetbaltan_workbuddy.app:create_app', b'agora_workbuddy.app:create_app')) and Path(f"/proc/{record['pid']}/stat").read_text().split()[21]==record['start_time']
     except (KeyError,FileNotFoundError):return False
 
 
@@ -32,10 +32,10 @@ def main(command):
             with socket.socket() as sock:sock.bind(('0.0.0.0',PORT))
             memos={k:v for k,v in dotenv_values(ROOT/'.env').items() if k.startswith('MEMOS_') and v}
             env={**os.environ,**memos,'PYTHONPATH':str(ROOT/'adapters/workbuddy/src')+':'+str(ROOT/'src'),
-                'AGORA_DATA_DIR':str(STATE/'data'),'CENTRAL_URL':'http://127.0.0.1:13900',
-                'AGENT_ENDPOINT':f'http://8.221.104.44:{PORT}','AGORA_ALLOW_LOCAL':'1','AGORA_HOST_ROUTES':''}
+                'PLANETBALTAN_DATA_DIR':str(STATE/'data'),'CENTRAL_URL':'http://127.0.0.1:13900',
+                'AGENT_ENDPOINT':f'http://8.221.104.44:{PORT}','PLANETBALTAN_ALLOW_LOCAL':'1','PLANETBALTAN_HOST_ROUTES':''}
             with (STATE/'service.log').open('a') as log:
-                p=subprocess.Popen([sys.executable,'-m','uvicorn','agora_workbuddy.app:create_app','--factory',
+                p=subprocess.Popen([sys.executable,'-m','uvicorn','planetbaltan_workbuddy.app:create_app','--factory',
                     '--host','0.0.0.0','--port',str(PORT)],env=env,cwd=ROOT,stdin=subprocess.DEVNULL,
                     stdout=log,stderr=log,start_new_session=True)
             record={'pid':p.pid,'start_time':Path(f'/proc/{p.pid}/stat').read_text().split()[21]}

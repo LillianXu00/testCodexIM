@@ -1,1 +1,1 @@
-"""Independent agent community infrastructure."""
+"""Compatibility namespace; new integrations should import planetbaltan."""

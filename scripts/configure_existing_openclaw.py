@@ -28,7 +28,7 @@ def configure(apply=False):
     servers=config.setdefault('mcp',{}).setdefault('servers',{})
     for name in ('main','english-learning','agora-tester'):
         node=services['nodes'][name]
-        server='agora-'+name
+        server='planetbaltan-'+name
         binding={'url':f"http://127.0.0.1:{node['port']}/sse",
                  'headers':{'Authorization':'Bearer '+node['token']}}
         previous = {**binding, 'url': binding['url'].removesuffix('/sse')+'/mcp'}
@@ -45,12 +45,12 @@ def configure(apply=False):
             if own not in also: also.append(own)
         deny=tools.setdefault('deny',[])
         for other in ('main','english-learning','agora-tester'):
-            rule='agora-'+other+'__*'
+            rule='planetbaltan-'+other+'__*'
             if other!=name and rule not in deny: deny.append(rule)
     candidate=STATE/'openclaw-candidate.json'
     candidate.write_text(json.dumps(config,indent=2,ensure_ascii=False)+'\n');os.chmod(candidate,0o600)
     summary={'existing_agents':['main','english-learning'],'new_agent':'agora-tester',
-        'mcp_servers':['agora-main','agora-english-learning','agora-agora-tester'],
+        'mcp_servers':['planetbaltan-main','planetbaltan-english-learning','planetbaltan-agora-tester'],
         'candidate_file':str(candidate),'channel_bindings_changed':config.get('bindings')!=before.get('bindings')}
     if not apply:
         print(json.dumps(summary,indent=2));return
@@ -61,16 +61,16 @@ def configure(apply=False):
     stamp=datetime.now().strftime('%Y%m%d-%H%M%S')
     backup=STATE/f'openclaw-before-{stamp}.json'
     backup.write_bytes(original);os.chmod(backup,0o600)
-    skill_path=Path('/root/.openclaw/skills/agora-community/SKILL.md')
-    skill=(ROOT/'packages/community-skill/SKILL.md').read_text()+'''\n## This machine's OpenClaw bindings\n\nUse only your own MCP namespace: main uses `agora-main__*`, english-learning uses\n`agora-english-learning__*`, agora-tester uses `agora-agora-tester__*`. Tool names\nafter the prefix match the names above. Do not use another agent's identity.\nThe services are local. Do not send native IM unless explicitly requested.\n'''
+    skill_path=Path('/root/.openclaw/skills/planetbaltan-community/SKILL.md')
+    skill=(ROOT/'packages/community-skill/SKILL.md').read_text()+'''\n## This machine's OpenClaw bindings\n\nUse only your own MCP namespace: main uses `planetbaltan-main__*`, english-learning uses\n`planetbaltan-english-learning__*`, agora-tester uses `planetbaltan-agora-tester__*`. Tool names\nafter the prefix match the names above. Do not use another agent's identity.\nThe services are local. Do not send native IM unless explicitly requested.\n'''
     if skill_path.exists() and skill_path.read_text()!=skill:
         raise RuntimeError('Existing community skill differs; review before replacement')
     skill_path.parent.mkdir(parents=True,exist_ok=True);skill_path.write_text(skill)
     workspace.mkdir(parents=True,exist_ok=True)
     if not (workspace/'IDENTITY.md').exists(): (workspace/'IDENTITY.md').write_text('# Identity\nName: Agora Tester\nRole: Independent community testing agent\n')
     if not (workspace/'AGENTS.md').exists(): (workspace/'AGENTS.md').write_text('''# Agora Tester
-You are an independent community test participant. Use the agora-community skill
-and your own agora-agora-tester MCP tools to read and report community tasks.
+You are an independent community test participant. Use the planetbaltan-community skill
+and your own planetbaltan-agora-tester MCP tools to read and report community tasks.
 Preserve your independent reasoning. Never claim another agent's identity.
 Do not contact external messaging channels during local community tests.
 ''')

@@ -1,7 +1,7 @@
 import json
 import httpx
-from agent_agora.config import Settings
-from agent_agora.sdk import CommunityClient
+from planetbaltan.config import Settings
+from planetbaltan.sdk import CommunityClient
 
 
 async def test_authority_identity_drives_subject_and_cross_agent_reads(tmp_path):

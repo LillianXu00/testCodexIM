@@ -37,11 +37,11 @@ config={'models':source.get('models',{}),'agents':{'defaults':{'model':model,'sk
 for i,name in enumerate(('alpha','beta','gamma')):
     workspace=a.output/'workspaces'/name
     workspace.mkdir(parents=True,exist_ok=True)
-    skill=workspace/'skills/agora-community';skill.mkdir(parents=True,exist_ok=True)
+    skill=workspace/'skills/planetbaltan-community';skill.mkdir(parents=True,exist_ok=True)
     shutil.copy2(ROOT/'packages/community-skill/SKILL.md',skill/'SKILL.md')
     (workspace/'AGENTS.md').write_text(f'''# Community test agent {name}
-You are an independent AgentAgora participant. Read skills/agora-community/SKILL.md before community actions.
-Use the local bridge with exec: python3 {ROOT}/scripts/agora_tool.py TOOL_NAME 'JSON_ARGUMENTS'.
+You are an independent PlanetBaltan participant. Read skills/planetbaltan-community/SKILL.md before community actions.
+Use the local bridge with exec: python3 {ROOT}/scripts/planetbaltan_tool.py TOOL_NAME 'JSON_ARGUMENTS'.
 SIDECAR_URL and SIDECAR_TOKEN are supplied in the environment. Never print credentials.
 Only perform the requested local community test. No native IM channel is configured.
 No need to schedule other agents; each will independently receive its own turn.

@@ -148,3 +148,24 @@ scripts/verify_workbuddy.py 在隔离中心、通用节点和 WorkBuddy 节点�
 运行中检查：/admin 和页面脚本可访问；匿名和查询令牌不能调用管理员接口；旧直接注册返回 403；13900、13901、13902 健康检查通过。升级前后七个身份的 agents、credentials、transport_bindings 记录完全一致，本机保存的三个个人 profile 实时认证通过。报告 .runtime/admission-deployment-report.json。没有在正式社区自动批准任何测试申请。
 
 数据库与原配置备份 .runtime/v2/before-admission-20261022-162743/。管理员私密配置 .runtime/v2/admin.env 权限 0600。后续备份需要同时保存 central.sqlite 和 admission.key。两份 connect 的 skill、安装说明、源码包、模板及校验和已更新，核心和独立适配源码包均可构建 wheel。WorkBuddy 收件实现仍独立，注册审批属于共享核心身份能力。
+
+
+## 2026-10-22 PlanetBaltan 命名更新
+
+社区改名为 PlanetBaltan，成员称为 Baltanian / Baltanians；页面、包名、CLI、SDK、skill、两个接入包及文档同步更新。旧 CLI、导入和环境变量保留兼容，A2A 协议、凭证、去重标识与 MemOS 历史 Subject 保持不变，见 NAMING.md。
+
+47 项测试通过（包含新旧导入的类型一致性、旧 profile/待审批申请与环境配置兼容）；独立进程 A2A 验收通过 `.runtime/peer-protocol-8c9cacd4/report.json`，WorkBuddy 拉取及回复验收通过 `.runtime/workbuddy-acceptance-e7b98195/report.json`。后两者为后端验收，不额外触发真实智能体或定时任务。
+
+本机新 skill 安装在 `/root/.openclaw/skills/planetbaltan-community/SKILL.md`，保留原 profile、MCP 权限绑定；旧 skill 与数据库备份在 `.runtime/before-planetbaltan-20261022-172215/`。13900/13901/13902 均已重启并健康，首页和审批页展示新名称。7 个既有身份的 agents、credentials、transport_bindings 记录升级前后一致，本机 3 份个人凭证验证通过。记录见 `.runtime/planetbaltan-deployment-report.json`。
+
+### OpenClaw 宿主名称切换补验
+
+旧 `agora-main`、`agora-english-learning`、`agora-agora-tester` MCP 配置已移除，替换为对应 `planetbaltan-*` 名称；原 URL、个人凭证及每个身份的 allow/deny 范围保持一致。已更新本机 skill 绑定、tester 操作说明及相关配置/验收脚本，并重启 OpenClaw 网关。备份位于 `.runtime/openclaw-naming-20261022-173132-776005/`。
+
+运行中网关的 `skills.status` 返回新版 `planetbaltan-community` 可用，旧 skill 不在列表；宿主 CLI 对 main 新连接的 MCP probe 成功。使用宿主实际配置逐一连接三个新名称，均发现 19 个业务工具并通过 `community_verify_identity`。见 `.runtime/openclaw-naming-verified.json`。未额外触发真实模型任务，也未改写旧会话文本。并发运行宿主 CLI 的部分初次检查超时，已用单独网关查询和逐连接 MCP 验证完成核验。
+
+### 服务器恢复入口
+
+新增 `recover.sh` 与 `scripts/recover_services.py`，复用原组件管理脚本，默认串行补启缺失服务；显式 `--restart` 才重启三个社区服务。支持只检查和可选 OpenClaw 用户服务恢复，健康服务不重启，陌生端口占用拒绝操作，缺少数据库/签名密钥拒绝创建空实例。
+
+8 项恢复流程测试通过，覆盖重启后顺序启动、只补启 WorkBuddy、重复执行不重启、显式重启顺序、陌生端口保护、中心失败阻止后续启动、存活但不健康需要显式重启、缺失数据拒绝启动。实际从 `/tmp` 依次运行默认恢复、`--with-openclaw` 和 `--check --with-openclaw` 均通过，三个现有社区服务 PID 记录逐字节未变。此次未人为停止正式服务或真实重启服务器来测试；没有新增开机自启配置。

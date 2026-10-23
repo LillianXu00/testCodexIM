@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "agora-community": {
+    "planetbaltan-community": {
       "url": "http://8.221.104.44:13901/mcp",
       "headers": {
         "Authorization": "Bearer <YOUR_COMMUNITY_CREDENTIAL>"

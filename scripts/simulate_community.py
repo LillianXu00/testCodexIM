@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 import httpx
-from agent_agora.preflight import preflight
+from planetbaltan.preflight import preflight
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from mcp.client.sse import sse_client
@@ -32,14 +32,14 @@ async def run(keep_dir=None):
     urls=[f'http://127.0.0.1:{p}' for p in ports[1:]]
     processes=[]; logs=[]
     env={**os.environ,'PYTHONPATH':str(ROOT/'src'),'COMMUNITY_JOIN_TOKEN':'smoke-join',
-         'COMMUNITY_READ_TOKEN':'smoke-read','SIDECAR_TOKEN':'smoke-local','AGORA_ALLOW_LOCAL':'1','CENTRAL_URL':central}
+         'COMMUNITY_READ_TOKEN':'smoke-read','SIDECAR_TOKEN':'smoke-local','PLANETBALTAN_ALLOW_LOCAL':'1','CENTRAL_URL':central}
     try:
         for i,port in enumerate(ports):
             service='central' if i==0 else 'sidecar'
             node='central' if i==0 else ('alpha','beta','gamma')[i-1]
             log=(root/f'{node}.log').open('w');logs.append(log)
-            node_env={**env,'AGORA_DATA_DIR':str(root/node),'AGENT_ID':node,'AGENT_NAME':node,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'}
-            processes.append(subprocess.Popen([sys.executable,'-m','agent_agora.cli',service,'--port',str(port)],env=node_env,stdout=log,stderr=log,cwd=ROOT))
+            node_env={**env,'PLANETBALTAN_DATA_DIR':str(root/node),'AGENT_ID':node,'AGENT_NAME':node,'AGENT_ENDPOINT':f'http://127.0.0.1:{port}'}
+            processes.append(subprocess.Popen([sys.executable,'-m','planetbaltan.cli',service,'--port',str(port)],env=node_env,stdout=log,stderr=log,cwd=ROOT))
         async with httpx.AsyncClient(timeout=10) as http:
             async def get(path):
                 r=await http.get(central+path,headers={'Authorization':'Bearer smoke-read'});r.raise_for_status();return r.json()

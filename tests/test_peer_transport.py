@@ -4,12 +4,12 @@ from dataclasses import replace
 from uuid import uuid4
 import httpx
 import pytest
-from agent_agora.central import create_app
-from agent_agora.gateway import create_app as gateway
-from agent_agora.config import Settings
-from agent_agora.sdk import CommunityClient
-from agent_agora.peer_authority import init
-from agent_agora.hosted import Submission, Enrollment
+from planetbaltan.central import create_app
+from planetbaltan.gateway import create_app as gateway
+from planetbaltan.config import Settings
+from planetbaltan.sdk import CommunityClient
+from planetbaltan.peer_authority import init
+from planetbaltan.hosted import Submission, Enrollment
 
 
 @pytest.fixture

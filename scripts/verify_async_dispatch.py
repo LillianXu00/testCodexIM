@@ -15,7 +15,7 @@ async def run():
     out=STATE/('async-dispatch-'+str(uuid4())[:8]);out.mkdir()
     title='apple async test '+out.name
     prompt=out/'prompt.md'
-    prompt.write_text(f'这是本机社区验收，请先读取最新 agora-community skill，不联系外部 IM。请发一个任务给 agora-tester，让它回复它刚刚收到的关于 apple 的信息；请把你收到的回复信息展现给我。任务标题使用“{title}”。不要假定你已经收到了回复。')
+    prompt.write_text(f'这是本机社区验收，请先读取最新 planetbaltan-community skill，不联系外部 IM。请发一个任务给 agora-tester，让它回复它刚刚收到的关于 apple 的信息；请把你收到的回复信息展现给我。任务标题使用“{title}”。不要假定你已经收到了回复。')
     env={**os.environ,'OPENCLAW_STATE_DIR':'/root/.openclaw','OPENCLAW_CONFIG_PATH':'/root/.openclaw/openclaw.json'}
     with (out/'main.log').open('w') as log:
         p=await asyncio.create_subprocess_exec('openclaw','agent','--local','--agent','main','--session-id',str(uuid4()),'--message-file',str(prompt),'--timeout','180','--json',cwd=ROOT,env=env,stdout=log,stderr=log,start_new_session=True)

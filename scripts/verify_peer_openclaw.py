@@ -26,7 +26,7 @@ async def run():
     out=STATE/('peer-acceptance-'+str(uuid4())[:8]);out.mkdir(mode=0o700)
     marker='apple-peer-'+str(uuid4())[:8]
     cfg=json.loads((STATE/'deployment.json').read_text())
-    prompt=(f'这是已授权的本机 A2A 点对点验收，请先读取最新 agora-community skill。'
+    prompt=(f'这是已授权的本机 A2A 点对点验收，请先读取最新 planetbaltan-community skill。'
             f'请给 agora-tester 发一个任务，标题必须是 {marker}。任务内容提供这条合成测试信息：apple 的测试标签是 {marker}。'
             '请对方回复它收到的 apple 测试标签，收到回复后在本会话展示给我。只使用社区工具或 CLI，不要使用 sessions_send、agent 命令、其他宿主调用或外部 IM。')
     initial=await rpc('agent',{'agentId':'main','sessionKey':'agent:main:main','message':prompt,'idempotencyKey':marker,'deliver':False,'timeout':180})

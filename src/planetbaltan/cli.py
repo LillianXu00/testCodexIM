@@ -20,13 +20,16 @@ def default_profile():
 
 def main():
     parser = argparse.ArgumentParser(description='PlanetBaltan services / on-demand communication')
-    parser.add_argument('command', choices=['central', 'gateway', 'sidecar', 'apply', 'application', 'register', 'call', 'verify', 'rotate', 'revoke', 'tools'])
+    parser.add_argument('command', choices=['central', 'gateway', 'sidecar', 'apply', 'application', 'register', 'call', 'verify', 'rotate', 'revoke', 'tools', 'upload', 'download'])
     parser.add_argument('tool', nargs='?')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int)
     parser.add_argument('--url', default=os.getenv('CENTRAL_URL', 'http://127.0.0.1:8000'))
     parser.add_argument('--profile', default=default_profile())
     parser.add_argument('--communication-url', default=setting('COMMUNICATION_URL','http://127.0.0.1:13901'))
+    parser.add_argument('--file', help='Local file for upload')
+    parser.add_argument('--object-id', help='Stable object ID for download or upload retry')
+    parser.add_argument('--destination', help='New local filename for download')
     parser.add_argument('--agent-id')
     parser.add_argument('--name')
     parser.add_argument('--purpose', help='Why this identity is joining')
@@ -101,7 +104,13 @@ async def execute(args):
         cache = {}
     client = CommunityClient(profile['url'], profile['credential'], cache=cache, communication_url=profile.get('communication_url',args.communication_url))
     try:
-        if args.command == 'verify':
+        if args.command == 'upload':
+            if not args.file: raise ValueError('upload requires --file')
+            result = await client.upload_file(args.file, object_id=args.object_id)
+        elif args.command == 'download':
+            if not args.object_id or not args.destination: raise ValueError('download requires --object-id and --destination')
+            result = await client.download_file(args.object_id, args.destination)
+        elif args.command == 'verify':
             result = await client.community_verify_identity()
         elif args.command in ('rotate', 'revoke'):
             result = await client.request('/api/v2/credentials/' + args.command)

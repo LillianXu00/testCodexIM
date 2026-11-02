@@ -53,7 +53,7 @@ def main(command):
                 if not owned(record):break
                 time.sleep(.1)
             else:raise RuntimeError('shutdown incomplete')
-        print(json.dumps({'running':owned(record),'mcp':f'http://8.221.104.44:{PORT}/mcp','adapter_version':'0.1.1'}))
+        print(json.dumps({'running':owned(record),'mcp':f'http://8.221.104.44:{PORT}/mcp','adapter_version':'0.2.0'}))
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('command',choices=['start','stop','status']);main(parser.parse_args().command)

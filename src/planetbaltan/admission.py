@@ -217,6 +217,7 @@ def install(app, authority, settings):
             db.execute('UPDATE transport_bindings SET active=0 WHERE agent=?',(body.agent_id,))
             db.execute("UPDATE admission_applications SET state='rejected',reason=?,code_digest=NULL,code_cipher=NULL,result_cipher=NULL WHERE agent=?",
                        ('Identity deleted: '+body.reason,body.agent_id))
+            db.execute('DELETE FROM agent_data_spaces WHERE agent=?',(body.agent_id,))
             db.execute('DELETE FROM agents WHERE id=?',(body.agent_id,))
         return {'agent_id':body.agent_id,'deleted':True,'cache_propagation_seconds':60}
 

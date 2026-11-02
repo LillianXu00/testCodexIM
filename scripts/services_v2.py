@@ -32,6 +32,7 @@ def run(command):
         if command=='start':
             from dotenv import dotenv_values
             memos={k:v for k,v in dotenv_values(ROOT/'.env').items() if k.startswith('MEMOS_') and v}
+            objects={k:v for k,v in dotenv_values(ROOT/'.runtime/object-storage.env').items() if k.startswith('CAPSULE_') and v}
             for name,node in cfg['services'].items():
                 if owned(records.get(name,{})):continue
                 with socket.socket() as sock:
@@ -41,6 +42,9 @@ def run(command):
                      'CENTRAL_URL':cfg['public_url'] if name=='central' else cfg['local_url'],
                      'AGENT_ENDPOINT':node['url'],'COMMUNITY_JOIN_TOKEN':cfg['join_token'],
                      'COMMUNITY_ADMIN_TOKEN':cfg.get('admin_token',''),'COMMUNITY_READ_TOKEN':cfg['read_token'],'PLANETBALTAN_ALLOW_LOCAL':'1','PLANETBALTAN_LEGACY_WRITES':'0'}
+                if name=='central' and (ROOT/'.runtime/object-spaces.json').exists():
+                    env.update(objects)
+                    env['PLANETBALTAN_STORAGE_CONFIG']=str(ROOT/'.runtime/object-spaces.json')
                 if name=='gateway':
                     env.update(memos)
                     env['PLANETBALTAN_HOST_ROUTES']=str(STATE/'host-routes.json')

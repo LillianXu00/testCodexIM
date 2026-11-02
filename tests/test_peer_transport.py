@@ -196,3 +196,24 @@ async def test_native_decode_rejects_forgery_and_wrong_recipient(peers):
     with pytest.raises(ValueError):
         await clients['b'].a2a_decode_message({'jsonrpc':'2.0','method':'message/send'})
     assert not host_calls
+
+
+async def test_object_reference_travels_in_signed_a2a_and_decodes(peers):
+    from planetbaltan.objects import Space
+    from test_objects import S3,ready
+    central,apps,c,http,available,host_calls=peers
+    storage=central.state.object_storage;fake=S3()
+    storage.upsert(Space(space_id='files',endpoint='https://storage.example',bucket='files'))
+    with storage.authority.transaction() as db:db.execute("INSERT INTO object_settings VALUES('default_space','files')")
+    storage.client=lambda _:fake
+    storage.ticket=lambda sp,data,upload=False: {'object':storage.ref(data),'url':'https://storage.example/file','headers':{}}
+    ref=await ready(central,c['a'],fake)
+    sent=await c['a'].a2a_publish_task('Read attachment','Use the attached file',['b'],objects=[ref])
+    await apps['a'].state.transport.work_once('p2p')
+    message=(await c['b'].a2a_get_unread_messages())[0]['event']
+    assert message['artifacts']['objects']==[ref]
+    assert 'Authorization' not in str(message) and 'X-Amz-' not in str(message)
+    assert (await c['b'].community_get_object_access(ref['object_id']))['object']==ref
+    # Mutating reference metadata must fail before a new message is queued.
+    with pytest.raises((ValueError,httpx.HTTPError)):
+        await c['a'].a2a_send_message('forged',['b'],objects=[{**ref,'name':'forged.bin'}])

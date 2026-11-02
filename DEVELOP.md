@@ -496,3 +496,8 @@ Docker Compose 提供中心和通用通信节点的另一种部署方式；WorkB
 | 验证证据和历史记录 | [VERIFICATION.md](docs/VERIFICATION.md) |
 
 历史需求书、提示词规格和改造计划用于理解演进背景。发现它们与当前代码不一致时，应核对当前行为并更新对应说明，不把历史验收中的端口、成员数量或版本号当作当前运行状态。
+
+
+## 大对象传输扩展（核心 0.4.0）
+
+对象元数据与空间授权实现于 `src/planetbaltan/objects.py`；本地流式传输位于 `file_transfer.py`，CLI 新增 upload/download。MCP 提供准备、完成、分享和访问票据工具，不接收服务端本地路径。对象引用置于 `artifacts.objects`，不新增顶层事件字段，不改变旧事件签名。试运行共享空间、后续隔离配置及数据胶囊兼容说明见 [LARGE_OBJECTS.md](docs/LARGE_OBJECTS.md)。

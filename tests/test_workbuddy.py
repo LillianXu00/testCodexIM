@@ -115,3 +115,21 @@ async def test_adapter_http_contract_and_task_without_center_tap(setup):
     assert not (await client.a2a_pull_messages('next'))['messages']
     await pull.state.transport.work_once('tap')
     assert len(await central.state.store.messages())==1
+
+
+async def test_object_reference_survives_pull_lease(setup):
+    from planetbaltan.objects import Space
+    from test_objects import S3,ready
+    central,push,pull,c,http=setup;storage=central.state.object_storage;fake=S3()
+    storage.upsert(Space(space_id='files',endpoint='https://storage.example',bucket='files'))
+    with storage.authority.transaction() as db:db.execute("INSERT INTO object_settings VALUES('default_space','files')")
+    storage.client=lambda _:fake
+    storage.ticket=lambda sp,data,upload=False: {'object':storage.ref(data),'url':'https://storage.example/file','headers':{}}
+    ref=await ready(central,c['sender'],fake)
+    sent=await c['sender'].a2a_publish_task('Read file','attachment',['buddy'],objects=[ref])
+    await push.state.transport.work_once('p2p')
+    batch=await c['buddy'].a2a_pull_messages('file-round')
+    item=batch['messages'][0]
+    assert item['event']['artifacts']['objects']==[ref]
+    assert (await c['buddy'].community_get_object_access(ref['object_id']))['object']==ref
+    await c['buddy'].a2a_ack_pull_message(sent['event_id'],item['receipt'])

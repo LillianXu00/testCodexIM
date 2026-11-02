@@ -94,26 +94,26 @@ class CommunityClient:
         receipt = Message.model_validate(result['result'])
         return next(p.root.data for p in receipt.parts if isinstance(p.root, DataPart))
 
-    async def a2a_send_message(self, content: str, mentions: list[str], task_id: str | None = None, event_id: str | None = None) -> dict:
+    async def a2a_send_message(self, content: str, mentions: list[str], task_id: str | None = None, event_id: str | None = None, objects: list[dict] | None = None) -> dict:
         """Send chat via A2A. Reuse event_id for identical retries."""
-        return await self.emit('CHAT', content, mentions, event_id, task_id=task_id)
+        return await self.emit('CHAT', content, mentions, event_id, task_id=task_id, **({'artifacts':{'objects':objects}} if objects else {}))
 
-    async def a2a_publish_task(self, title: str, description: str, mentions: list[str], parent_task_id: str | None = None, task_id: str | None = None, event_id: str | None = None) -> dict:
+    async def a2a_publish_task(self, title: str, description: str, mentions: list[str], parent_task_id: str | None = None, task_id: str | None = None, event_id: str | None = None, objects: list[dict] | None = None) -> dict:
         """Publish and END THIS TURN. Never sleep or poll for a reply. Eventual replies enter your host later. Remember context using your own memory."""
         # Derivation makes retries with the same event_id stable without local process state.
         from uuid import UUID, uuid5, NAMESPACE_URL
         event_id = str(UUID(event_id)) if event_id else str(uuid4())
         task_id = task_id or str(uuid5(NAMESPACE_URL, 'agora-task:' + event_id))
-        return await self.emit('TASK_PUBLISH', description, mentions, event_id, title=title, task_id=task_id, parent_task_id=parent_task_id)
+        return await self.emit('TASK_PUBLISH', description, mentions, event_id, title=title, task_id=task_id, parent_task_id=parent_task_id, **({'artifacts':{'objects':objects}} if objects else {}))
 
-    async def a2a_update_task_status(self, task_id: str, status: str, comment: str, mentions: list[str], artifacts: dict | None = None, event_id: str | None = None) -> dict:
+    async def a2a_update_task_status(self, task_id: str, status: str, comment: str, mentions: list[str], artifacts: dict | None = None, event_id: str | None = None, objects: list[dict] | None = None) -> dict:
         """Record only your own actual status. mentions=[] records without notifying peers; avoids acknowledgment loops. No enforced transitions."""
-        return await self.emit('TASK_REPORT', comment, mentions, event_id, task_id=task_id, status=status, artifacts=artifacts or {})
+        return await self.emit('TASK_REPORT', comment, mentions, event_id, task_id=task_id, status=status, artifacts={**(artifacts or {}), **({'objects':objects} if objects else {})})
 
-    async def a2a_reply_task(self, task_id: str, reply_to_event_id: str, content: str, status: str, mentions: list[str], artifacts: dict | None = None, event_id: str | None = None) -> dict:
+    async def a2a_reply_task(self, task_id: str, reply_to_event_id: str, content: str, status: str, mentions: list[str], artifacts: dict | None = None, event_id: str | None = None, objects: list[dict] | None = None) -> dict:
         """Reply asynchronously and record your own status in one event. Preserve task_id, use a new event_id. Does not wait for acknowledgment."""
         return await self.emit('TASK_REPORT', content, mentions, event_id, task_id=task_id,
-                               reply_to_event_id=reply_to_event_id, status=status, artifacts=artifacts or {})
+                               reply_to_event_id=reply_to_event_id, status=status, artifacts={**(artifacts or {}), **({'objects':objects} if objects else {})})
 
     async def community_get_task(self, task_id: str) -> dict:
         """Read community task history and reply links; your own memory retrieval remains your responsibility."""
@@ -146,6 +146,40 @@ class CommunityClient:
     async def community_list_resources(self, query: str = '', limit: int = 100, offset: int = 0) -> list[dict]:
         """Find external skill references."""
         return await self.operation('resources', query=query, limit=limit, offset=offset)
+
+    async def community_get_data_space(self) -> dict:
+        """Read your centrally assigned data space; includes no storage credential."""
+        return await self.request('/api/v3/objects/space')
+
+    async def community_prepare_object(self, name: str, size_bytes: int, sha256: str, media_type: str = 'application/octet-stream', object_id: str | None = None) -> dict:
+        """Reserve a named object and obtain a short-lived signed direct PUT request. Upload bytes with native HTTP, not in a tool argument. Reuse object_id on retry."""
+        return await self.request('/api/v3/objects/prepare', dict(name=name,size_bytes=size_bytes,sha256=sha256,media_type=media_type,object_id=object_id or str(uuid4())))
+
+    async def community_complete_object(self, object_id: str) -> dict:
+        """Verify uploaded length (and digest metadata when supported); return stable A2A reference. Recipient must verify file SHA256."""
+        return await self.request('/api/v3/objects/complete', {'object_id':object_id})
+
+    async def community_get_object_access(self, object_id: str) -> dict:
+        """Authorize a ready object and obtain a fresh short-lived download URL. Never put this capability URL in public messages."""
+        return await self.request('/api/v3/objects/access', {'object_id':object_id})
+
+    async def community_share_object(self, object_id: str, recipients: list[str]) -> dict:
+        """Owner authorizes named registered recipients, including those assigned to isolated spaces."""
+        return await self.request('/api/v3/objects/share', {'object_id':object_id,'recipients':recipients})
+
+    async def community_abort_object(self, object_id: str) -> dict:
+        """Release an unfinished reservation after 24h + URL lifetime. Does not delete completed objects."""
+        return await self.request('/api/v3/objects/abort', {'object_id':object_id})
+
+    async def upload_file(self, path, *, name=None, media_type='application/octet-stream', object_id=None):
+        """Local SDK only: stream a file directly to object storage, then register completion."""
+        from .file_transfer import upload
+        return await upload(self,path,name,media_type,object_id)
+
+    async def download_file(self, object_id, destination):
+        """Local SDK only: stream to a new file and verify size/SHA256 before exposing it."""
+        from .file_transfer import download
+        return await download(self,object_id,destination)
 
     async def memory(self):
         identity = await self.community_verify_identity()

@@ -21,7 +21,7 @@ def create_app(settings=None):
     settings=settings or Settings()
     http=httpx.AsyncClient(timeout=30,follow_redirects=False)
     transport=PullTransport(settings,http)
-    mcp=FastMCP('PlanetBaltan WorkBuddy 0.1.1',stateless_http=True,json_response=True,
+    mcp=FastMCP('PlanetBaltan WorkBuddy 0.2.0',stateless_http=True,json_response=True,
                 transport_security=mcp_security(settings.endpoint))
 
     def register(name):
@@ -62,7 +62,7 @@ def create_app(settings=None):
     async def invalid(request,exc):return JSONResponse({'detail':str(exc)},status_code=400)
 
     @app.get('/health')
-    async def health():return {'ok':True,'adapter':'workbuddy','version':'0.1.1','consumer_scheduler':False}
+    async def health():return {'ok':True,'adapter':'workbuddy','version':'0.2.0','consumer_scheduler':False}
 
     @app.post('/api/workbuddy/{operation}')
     async def adapter(operation:str,body:dict,authorization:str=Header(default='')):
@@ -82,7 +82,7 @@ def create_app(settings=None):
     async def card(agent:str):
         transport.require_member(agent)
         return {'name':agent,'description':'Durable pull inbox; consumed by native host schedule',
-            'url':settings.endpoint.rstrip('/')+'/agents/'+agent+'/a2a','version':'0.1.1','protocolVersion':'0.3.0',
+            'url':settings.endpoint.rstrip('/')+'/agents/'+agent+'/a2a','version':'0.2.0','protocolVersion':'0.3.0',
             'capabilities':{'extensions':[{'uri':'urn:agent-agora:peer:v3','required':True}]},
             'defaultInputModes':['application/json'],'defaultOutputModes':['application/json'],
             'skills':[{'id':'pull-inbox','name':'Pull inbox','description':'Persist without invoking host','tags':['pull']}]}

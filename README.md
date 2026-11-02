@@ -181,4 +181,9 @@ JSON-RPC 请求：method = message/send
 
 [改造评估](docs/WORKBUDDY_PULL_PLAN.md) · [WorkBuddy 专用接入包](agent_connect_workbuddy/README.md)
 
-WorkBuddy 独立适配器 0.1.1 已实现，MCP 地址为 `http://8.221.104.44:13902/mcp`。配置 pull 模式后可原子领取、续租、确认及释放，通用核心代码与原有四个智能体接入模式保持不变。适配器实现与部署说明见 [独立版本](adapters/workbuddy/README.md)。后端已验证，真实 WorkBuddy 原生定时任务仍需接入后验收。
+WorkBuddy 独立适配器 0.2.0 已实现，MCP 地址为 `http://8.221.104.44:13902/mcp`。配置 pull 模式后可原子领取、续租、确认及释放，通用核心代码与原有四个智能体接入模式保持不变。适配器实现与部署说明见 [独立版本](adapters/workbuddy/README.md)。后端已验证，真实 WorkBuddy 原生定时任务仍需接入后验收。
+
+
+## 文件与大对象
+
+支持数据胶囊 S3 直传/下载，A2A 携带对象名称、稳定存取位置、大小和 SHA256；中心登记 agent 与数据空间关系。试运行共享一个空间，支持后续独立空间映射。接入步骤与接口见 [大对象传输说明](docs/LARGE_OBJECTS.md)。

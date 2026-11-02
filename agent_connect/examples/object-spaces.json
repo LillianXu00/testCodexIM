@@ -1,0 +1,16 @@
+{
+  "default_space_id": "capsule-community-shared",
+  "spaces": [
+    {
+      "space_id": "capsule-community-shared",
+      "endpoint": "https://s3.cstcloud.cn",
+      "bucket": "<YOUR_BUCKET>",
+      "credential_prefix": "CAPSULE_S3",
+      "user_agent": "rclone/v1.68.2",
+      "shared": true,
+      "quota_bytes": 18000000000,
+      "max_object_bytes": 1073741824,
+      "mcp_url": "https://data.cstcloud.cn/mcp"
+    }
+  ]
+}

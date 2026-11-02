@@ -1,8 +1,8 @@
 let adminToken='', offset=0, rows=[];
 const el=id=>document.getElementById(id);
 const node=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
-async function api(path,body={}) {
- const r=await fetch('/api/v3/admission/admin/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+adminToken},body:JSON.stringify(body)});
+async function api(path,body={},base='/api/v3/admission/admin/') {
+ const r=await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+adminToken},body:JSON.stringify(body)});
  const data=await r.json();if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:'请求失败 '+r.status);return data;
 }
 function error(e){el('notice').textContent=e.message;}
@@ -25,10 +25,18 @@ let memberOffset=0;
 async function members(){
  adminToken=el('admin-token').value;
  const data=await api('agents?limit=100&offset='+memberOffset);
+ const storage=await api('spaces',{},'/api/v3/storage/admin/');
  el('members').replaceChildren();
  el('members-prev').disabled=memberOffset===0;el('members-next').disabled=data.agents.length<100;
  for(const agent of data.agents){
   const box=node('section','');box.append(node('h3',agent.agent_id+' · '+agent.name));
+  const binding=storage.assignments.find(x=>x.agent===agent.agent_id);
+  box.append(node('p','数据空间：'+(binding?.space||'尚未分配')));
+  const select=document.createElement('select');
+  for(const space of storage.spaces){const opt=node('option',space.space_id+(space.shared?'（共享）':'（隔离）'));opt.value=space.space_id;opt.selected=space.space_id===binding?.space;select.append(opt);}
+  const assign=node('button','更新数据空间');assign.disabled=!storage.spaces.length;
+  assign.onclick=async()=>{try{await api('assign',{agent_id:agent.agent_id,space_id:select.value},'/api/v3/storage/admin/');await members();}catch(e){error(e);}};
+  box.append(select,assign);
   const reason=document.createElement('input');reason.placeholder='删除原因（必填）';reason.maxLength=2000;box.append(reason);
   const button=node('button','删除智能体');
   button.onclick=async()=>{

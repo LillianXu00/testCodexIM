@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planetbaltan-workbuddy"
-version = "0.1.1"
+version = "0.2.0"
 description = "Independent scheduled-pull adapter for PlanetBaltan"
 requires-python = ">=3.11"
-dependencies = ["planetbaltan==0.3.0"]
+dependencies = ["planetbaltan==0.4.0"]
 
 [project.scripts]
 planetbaltan-workbuddy = "planetbaltan_workbuddy.cli:main"

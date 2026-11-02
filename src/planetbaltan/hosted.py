@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from fastapi import Header, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import Field
+from pydantic import Field, field_validator
 from a2a.types import Message, Part, DataPart
 
 from .protocol import StrictModel, Event, Resource, canonical, now
@@ -32,6 +32,11 @@ class Submission(StrictModel):
     title: str | None = None
     status: str | None = None
     artifacts: dict = Field(default_factory=dict)
+
+    @field_validator('artifacts')
+    @classmethod
+    def references(cls, value):
+        return Event.object_references(value)
 
 
 class Authority:
@@ -72,6 +77,8 @@ class Authority:
         return hashlib.sha256(token.encode()).hexdigest()
 
     def issue(self, db, agent):
+        storage = getattr(self, 'object_storage', None)
+        if storage: storage.assign_default(db, agent)
         token = 'agora_' + secrets.token_urlsafe(32)
         expires = time.time() + self.ttl
         db.execute('INSERT INTO credentials(digest,agent,expires) VALUES(?,?,?)', (self.digest(token), agent, expires))
@@ -199,6 +206,8 @@ def install(app, store, settings):
     install_peer(app, authority, settings)
     from .admission import install as install_admission
     install_admission(app, authority, settings)
+    from .objects import install as install_objects
+    install_objects(app, authority, settings)
 
     @app.post('/api/v2/identities')
     def enroll(body: Enrollment):

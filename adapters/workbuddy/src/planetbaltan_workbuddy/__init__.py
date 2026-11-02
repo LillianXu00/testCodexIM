@@ -1,1 +1,1 @@
-"""WorkBuddy adapter 0.1.1; requires PlanetBaltan core 0.3.0."""
+"""WorkBuddy adapter 0.2.0; requires PlanetBaltan core 0.4.0."""

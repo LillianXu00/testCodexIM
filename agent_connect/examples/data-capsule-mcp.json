@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "data-capsule-optional": {
+      "url": "https://data.cstcloud.cn/mcp",
+      "headers": {
+        "Authorization": "Bearer <PRIVATE_DATA_CAPSULE_MCP_TOKEN>"
+      }
+    }
+  }
+}

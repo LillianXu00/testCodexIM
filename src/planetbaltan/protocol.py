@@ -52,6 +52,25 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class ObjectReference(StrictModel):
+    object_id: UUID
+    space_id: str = Field(min_length=1, max_length=100)
+    owner_id: str = Field(min_length=1, max_length=128)
+    name: str = Field(min_length=1, max_length=255)
+    uri: str = Field(min_length=1, max_length=2048)
+    size_bytes: int = Field(ge=0)
+    sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
+    media_type: str = Field(min_length=1, max_length=200)
+
+    @field_validator('uri')
+    @classmethod
+    def storage_uri(cls, value):
+        p=urlsplit(value)
+        if p.scheme!='s3' or not p.netloc or not p.path or p.username or p.password or p.query or p.fragment:
+            raise ValueError('stable s3 URI required; signed URLs are not message references')
+        return value
+
+
 class Event(StrictModel):
     event_id: UUID = Field(default_factory=uuid4)
     sender_id: str = Field(min_length=1, max_length=128, pattern=r"^[a-zA-Z0-9_.-]+$")
@@ -68,6 +87,15 @@ class Event(StrictModel):
     title: str | None = Field(default=None, max_length=500)
     status: str | None = Field(default=None, max_length=100)
     artifacts: dict = Field(default_factory=dict)
+
+    @field_validator('artifacts')
+    @classmethod
+    def object_references(cls, value):
+        if 'objects' in value:
+            items=value['objects']
+            if not isinstance(items,list) or len(items)>32:raise ValueError('at most 32 object references allowed')
+            for item in items:ObjectReference.model_validate(item)
+        return value
 
     @field_validator("occurred_at")
     @classmethod

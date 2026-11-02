@@ -30,6 +30,8 @@ def load_deployment():
     for relative in required:
         if not (ROOT/relative).is_file():
             raise RecoveryError('缺少现有部署文件，请先恢复数据：' + relative)
+    if (ROOT/'.runtime/object-spaces.json').exists() and not (ROOT/'.runtime/object-storage.env').is_file():
+        raise RecoveryError('缺少 .runtime/object-storage.env，先恢复对象存储私有配置。')
     if not VENV.is_file():
         raise RecoveryError('缺少 .venv/bin/python，请先恢复项目虚拟环境。')
     cfg = json.loads((ROOT/required[0]).read_text())

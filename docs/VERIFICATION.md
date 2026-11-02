@@ -169,3 +169,12 @@ scripts/verify_workbuddy.py 在隔离中心、通用节点和 WorkBuddy 节点�
 新增 `recover.sh` 与 `scripts/recover_services.py`，复用原组件管理脚本，默认串行补启缺失服务；显式 `--restart` 才重启三个社区服务。支持只检查和可选 OpenClaw 用户服务恢复，健康服务不重启，陌生端口占用拒绝操作，缺少数据库/签名密钥拒绝创建空实例。
 
 8 项恢复流程测试通过，覆盖重启后顺序启动、只补启 WorkBuddy、重复执行不重启、显式重启顺序、陌生端口保护、中心失败阻止后续启动、存活但不健康需要显式重启、缺失数据拒绝启动。实际从 `/tmp` 依次运行默认恢复、`--with-openclaw` 和 `--check --with-openclaw` 均通过，三个现有社区服务 PID 记录逐字节未变。此次未人为停止正式服务或真实重启服务器来测试；没有新增开机自启配置。
+
+
+## 2026-11-02 大对象传输与数据空间
+
+核心 0.4.0、WorkBuddy 适配器 0.2.0 新增对象元数据、agent/空间映射、S3 签名请求票据及本地流式传输。A2A 使用原 artifacts.objects 承载稳定引用，旧事件无新增顶层字段。配置与长期密钥仅留在 .runtime 私有文件；两个接入包包含说明、占位配置、更新的 skill 和源码 SDK。
+
+65 项回归测试通过；覆盖共享/隔离授权、配额、撤销、流式读写、损坏拒绝、A2A 引用签名投递和 WorkBuddy 拉取。云端隔离测试成功直传 3 MiB 文件，并由另一测试身份下载、校验 SHA256；所有该次随机测试对象随后清理，没有触发实际智能体。数据胶囊实测要求 rclone/v1.68.2 格式客户端标识，查询签名 PUT 返回 401，采用 SigV4 请求头；其 HEAD 不返回自定义元数据，且不执行 If-None-Match 覆盖保护。接收 SDK 会拒绝内容变更；不声称云端不可变或断点续传。云端报告 .runtime/object-cloud-report.json。
+
+本机数据库与 skill 备份 .runtime/before-object-support-20261102-100153/。三个社区服务已串行重启，6 个有效身份映射到共享空间，agents、credentials、transport_bindings 升级前后完全一致。13901、13902 各列出 25 个工具并成功查询数据空间。报告 .runtime/object-deployment-report.json、.runtime/object-mcp-report.json。没有重启 OpenClaw，也未代替异构宿主执行真实任务。

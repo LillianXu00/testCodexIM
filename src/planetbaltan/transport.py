@@ -128,6 +128,12 @@ CREATE TABLE IF NOT EXISTS jobs(event TEXT, kind TEXT, target TEXT, state TEXT D
         if (not body.mentions and body.kind!='TASK_REPORT') or ('all' in body.mentions and body.mentions!=['all']):raise ValueError('invalid mentions')
         recipients=sorted((set(members) if body.mentions==['all'] else set(body.mentions))-{sender})
         if set(recipients)-members.keys():raise ValueError('recipient has no registered A2A endpoint')
+        if body.artifacts.get('objects'):
+            from .protocol import ObjectReference
+            for item in body.artifacts['objects']:
+                ref=ObjectReference.model_validate(item).model_dump(mode='json')
+                approved=await self.central('/api/v3/objects/share',{'object_id':ref['object_id'],'recipients':recipients},token)
+                if ref!=approved:raise ValueError('object reference does not match registered metadata')
         destinations={a:(members[a].get('a2a_url') or members[a]['endpoint'].rstrip('/')+'/a2a') for a in recipients}
         for destination in destinations.values():validate_endpoint(destination,self.settings.allow_local)
         with self.db() as db:
